@@ -6,7 +6,7 @@ import random
 
 # === Settings ===
 
-WEBHOOK_URL = "https://discord.com/api/webhooks/1373286687668699187/AS1PLzkeCJNyDlP5Lrf4jqZHfWX1ie2g786lRisf19iXqg0G1loBH8Yh_CKt9YXNSoER"
+WEBHOOK_URL = "https://discord.com/api/webhooks/1387507945474097272/_GxnDXLkHtLZEnLB4uy8zYs8J13NsKpvV7sjnq50hTuqTkldLgp9stIg_Sv6rFh44uyM"
 INPUT_FILE = "testsada.txt"
 BATCH_SIZE = 20
 MAX_CONCURRENT_REQUESTS = 10
@@ -73,6 +73,7 @@ async def check_batch_usernames(session, usernames_batch):
     try:
         ip = await get_public_ip(session)
         print(f"🌐 Batch ({len(usernames_batch)}): Sending from IP {ip}")
+        await asyncio.sleep(random.uniform(0.15, 0.25))  # short delay
         async with session.get(url, timeout=30, headers=get_random_headers()) as response:
             print(f"➡️  Response: {response.status}")
             return response.status == 500
@@ -80,17 +81,18 @@ async def check_batch_usernames(session, usernames_batch):
         print(f"Batch error: {e}")
         return False
 
-# === Check individual username ===
 
 async def check_username_individually(session, username):
     url = f"https://api-cops.criticalforce.fi/api/public/profile?usernames={username}"
     try:
+        await asyncio.sleep(random.uniform(0.15, 0.25))  # short delay
         async with session.get(url, timeout=30, headers=get_random_headers()) as response:
             print(f"🔍 {username}: {response.status}")
             return username if response.status == 500 else None
     except Exception as e:
         print(f"❌ {username} failed: {e}")
         return None
+
 
 # === Recursive divide & conquer ===
 
@@ -125,19 +127,13 @@ async def send_discord_notification(free_names, batch_number):
 
 # === Send final summary ===
 
-import datetime  # Add this at the top of your file
-
-# === Send final summary ===
-
 async def send_summary_notification(free_names, duration):
     if not free_names or not WEBHOOK_URL:
         return
     duration_str = time.strftime("%H:%M:%S", time.gmtime(duration))
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Real current time
     message = (
         f"**📊 IGN Check Summary**\n"
         f"🕒 Time: `{duration_str}`\n"
-        f"📅 Date: `{current_time}`\n"
         f"🟩 Total Free: `{len(free_names)}`\n\n"
         f"**List:**\n" + "\n".join(f"- {name}" for name in free_names)
     )
@@ -204,4 +200,3 @@ async def main_loop():
 
 if __name__ == "__main__":
     asyncio.run(main_loop())
-
